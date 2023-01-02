@@ -1,0 +1,2 @@
+# NewSettler
+News parsing bot
