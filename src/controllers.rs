@@ -9,7 +9,7 @@ pub async fn start_pooling(db: &Database, bot: Bot) {
     let mut last_new = String::new();
     loop {
         // Check if first new is changed
-        // then if yes iterate through all chat_ids in db
+        // if yes then iterate through all chat_ids in db
         // time check = 1 min
         let first_new = get_one_new().await.unwrap_or_else(|err| {
             log::error!("Error getting one new: {}", err);
@@ -19,17 +19,14 @@ pub async fn start_pooling(db: &Database, bot: Bot) {
         if first_new != last_new {
             last_new = first_new.clone();
             let user_ids = db.get_users_id().await;
-            match user_ids {
-                Ok(user_list) => {
-                    for user_id in user_list {
-                        if let Err(err) = bot.send_message(ChatId(user_id), &first_new).await {
-                            log::error!("{}", err)
-                        }
+            if let Ok(user_list) = user_ids {
+                for user_id in user_list {
+                    if let Err(err) = bot.send_message(ChatId(user_id), &first_new).await {
+                        log::error!("{}", err)
                     }
                 }
-                Err(err) => {
-                    log::error!("{}", err)
-                }
+            } else if let Err(err) = user_ids {
+                log::error!("{}", err)
             }
         }
         tokio::time::sleep(Duration::from_secs(60)).await;
@@ -37,11 +34,15 @@ pub async fn start_pooling(db: &Database, bot: Bot) {
 }
 
 pub async fn handle_start(chat_id: ChatId, bot: Bot) {
+    // Send greeting message to user and news
     tokio::spawn(send_first_news(chat_id.clone(), bot.clone()));
-    let db = DATABASE.get().await;
-    db.insert_user(&chat_id)
-        .await
-        .unwrap_or_else(|err| log::error!("{}", err));
+    // Insert user to db
+    tokio::spawn(async move {
+        let db = DATABASE.get().await;
+        db.insert_user(&chat_id)
+            .await
+            .unwrap_or_else(|err| log::error!("{}", err));
+    });
 }
 
 pub async fn parse_news() -> Result<Vec<String>, Box<dyn std::error::Error>> {
