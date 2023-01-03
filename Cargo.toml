@@ -20,6 +20,7 @@ sea-orm = { version = "0.10.5"}
 directories = "4.0.1"
 lazy_static = "1.4.0"
 async_once = "0.2.6"
+openssl = { version = "*", features = ["vendored"] }
 
 [dependencies.sea-orm-migration]
 version = "0.10.5"
@@ -29,5 +30,6 @@ features = [
 ]
 
 [profile.release]
+strip = true
 lto = true
 codegen-units = 1
