@@ -6,6 +6,7 @@ mod controllers;
 mod db;
 mod entity;
 mod migration;
+mod parsing_data;
 
 #[tokio::main]
 async fn main() {

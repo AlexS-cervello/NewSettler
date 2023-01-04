@@ -4,8 +4,8 @@ use crate::entity::users;
 use crate::migration::{DbErr, Migrator, MigratorTrait};
 use directories::BaseDirs;
 use sea_orm::{
-    ColumnTrait, Database as SeaOrmDatabase, DatabaseConnection, EntityTrait, NotSet, QueryFilter,
-    Set,
+    ColumnTrait, Database as SeaOrmDatabase, DatabaseConnection, EntityTrait,
+    NotSet, QueryFilter, Set,
 };
 use teloxide::types::ChatId;
 
@@ -96,7 +96,8 @@ impl Database {
             .filter(users::Column::IsActive.eq(true))
             .all(&self.pool)
             .await?;
-        let user_ids: Vec<i64> = users.into_iter().map(|user| user.chat_id).collect();
+        let user_ids: Vec<i64> =
+            users.into_iter().map(|user| user.chat_id).collect();
         Ok(user_ids)
     }
 }

@@ -41,7 +41,8 @@ pub async fn run() {
     let bot = Bot::from_env();
     tokio::spawn(start_pooling(DATABASE.get().await, bot.clone()));
 
-    let handler = dptree::entry().branch(Update::filter_message().endpoint(message_handler));
+    let handler = dptree::entry()
+        .branch(Update::filter_message().endpoint(message_handler));
     Dispatcher::builder(bot, handler)
         .enable_ctrlc_handler()
         .build()
@@ -57,10 +58,13 @@ async fn message_handler(
     if let Some(text) = msg.text() {
         match BotCommands::parse(text, me.username()) {
             Ok(Command::Help) => {
-                bot.send_message(msg.chat.id, Command::descriptions().to_string())
-                    .await?;
+                bot.send_message(
+                    msg.chat.id,
+                    Command::descriptions().to_string(),
+                )
+                .await?;
             }
-            Ok(Command::Start) => handle_start(msg.chat.id, bot.clone()).await,
+            Ok(Command::Start) => handle_start(msg.chat.id, bot).await,
             Err(_) => {
                 bot.send_message(msg.chat.id, "Command not found.").await?;
             }
