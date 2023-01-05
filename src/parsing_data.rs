@@ -1,25 +1,32 @@
 use scraper::{Html, Selector};
 
+const URL_HACKN: &'static str = "https://news.ycombinator.com/";
+const SEL_HACKN: &'static str = "span.titleline>a";
+const URL_HABR: &'static str = "https://habr.com";
+const SEL_HABR_HREF: &'static str = "article>div>h2>a";
+
 async fn get_parsing_vars(
     url: &str,
-    selector: &'static str,
-) -> Result<(Html, Selector), Box<dyn std::error::Error>> {
+    selector: &Vec<&'static str>,
+) -> Result<(Html, Vec<Selector>), Box<dyn std::error::Error>> {
     let response = reqwest::get(url).await?.text().await?;
     let document = Html::parse_document(&response);
-    let selector = Selector::parse(selector)?;
+    let selectors = selector
+        .into_iter()
+        .map(|el| Selector::parse(el))
+        .collect::<Result<Vec<Selector>, _>>()?; //TODO replace that underscore
 
-    Ok((document, selector))
+    Ok((document, selectors))
 }
 
 pub async fn parse_starting_news(
 ) -> Result<Vec<String>, Box<dyn std::error::Error>> {
     let mut result: Vec<String> = vec![];
     let (document, selector) =
-        get_parsing_vars("https://news.ycombinator.com/", "span.titleline>a")
-            .await?;
+        get_parsing_vars(URL_HACKN, &vec![SEL_HACKN]).await?;
     // TODO replace with filter_map
     document
-        .select(&selector)
+        .select(&selector[0])
         .map(|el| {
             format!(
                 "{}\n{}",
@@ -39,10 +46,9 @@ pub async fn parse_starting_news(
 pub async fn get_one_new_hackernews(
 ) -> Result<String, Box<dyn std::error::Error>> {
     let (document, selector) =
-        get_parsing_vars("https://news.ycombinator.com/", "span.titleline>a")
-            .await?;
+        get_parsing_vars(URL_HACKN, &vec![SEL_HACKN]).await?;
     let result = document
-        .select(&selector)
+        .select(&selector[0])
         .map(|el| {
             format!(
                 "{}\n{}",
@@ -61,9 +67,9 @@ pub async fn get_one_new_hackernews(
 
 pub async fn get_one_new_habr() -> Result<String, Box<dyn std::error::Error>> {
     let (document, selector) =
-        get_parsing_vars("https://habr.com", "article>div>h2>a").await?;
+        get_parsing_vars(URL_HABR, &vec![SEL_HABR_HREF]).await?;
     let result = document
-        .select(&selector)
+        .select(&selector[0])
         .map(|el| format!("{}", el.inner_html()))
         .next()
         .unwrap_or("".to_string());

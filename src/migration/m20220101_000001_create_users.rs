@@ -18,7 +18,7 @@ impl MigrationTrait for Migration {
                             .auto_increment()
                             .primary_key(),
                     )
-                    .col(ColumnDef::new(Users::ChatId).string().not_null())
+                    .col(ColumnDef::new(Users::ChatId).integer().not_null())
                     .col(ColumnDef::new(Users::IsActive).boolean().not_null())
                     .to_owned(),
             )

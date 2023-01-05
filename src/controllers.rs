@@ -2,11 +2,14 @@ use std::time::Duration;
 
 use crate::bot::DATABASE;
 use crate::db::Database;
-use crate::parsing_data::{get_one_new_hackernews, parse_starting_news};
+use crate::parsing_data::{
+    get_one_new_habr, get_one_new_hackernews, parse_starting_news,
+};
 use teloxide::{requests::Requester, types::ChatId, Bot};
 
 pub async fn start_pooling(db: &Database, bot: Bot) {
     let mut last_new_hackernew = String::new();
+    let mut last_new_habr = String::new();
     loop {
         // Every minute checks for hacker new
         send_last_new_hackernews(db, &bot, &mut last_new_hackernew)
@@ -51,7 +54,7 @@ async fn send_last_new_hackernews(
         "Error getting new from hackernews".to_string()
     });
 
-    if first_new != last_new.to_owned() {
+    if first_new.as_str() != last_new {
         *last_new = first_new.clone();
         let user_ids = db.get_users_id().await;
         if let Ok(user_list) = user_ids {
