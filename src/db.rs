@@ -8,11 +8,14 @@ use sea_orm::{
     NotSet, QueryFilter, Set,
 };
 use teloxide::types::ChatId;
+use teloxide::RequestError;
 
 #[derive(Debug)]
 pub enum Error {
     Database(DbErr),
     File(std::io::Error),
+    Net(RequestError),
+    Generic(Box<dyn std::error::Error + Send + Sync>),
 }
 
 impl std::fmt::Display for Error {
@@ -23,6 +26,12 @@ impl std::fmt::Display for Error {
             }
             Self::File(ref err) => {
                 write!(f, "File error: {}", err)
+            }
+            Self::Generic(ref err) => {
+                write!(f, "Other error: {}", err)
+            }
+            Self::Net(ref err) => {
+                write!(f, "Network error: {}", err)
             }
         }
     }
@@ -37,6 +46,18 @@ impl From<DbErr> for Error {
 impl From<std::io::Error> for Error {
     fn from(err: std::io::Error) -> Self {
         Self::File(err)
+    }
+}
+
+impl From<Box<dyn std::error::Error + Send + Sync>> for Error {
+    fn from(err: Box<dyn std::error::Error + Send + Sync>) -> Self {
+        Self::Generic(err)
+    }
+}
+
+impl From<RequestError> for Error {
+    fn from(err: RequestError) -> Self {
+        Self::Net(err)
     }
 }
 

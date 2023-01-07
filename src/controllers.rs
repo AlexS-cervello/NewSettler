@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use crate::bot::DATABASE;
-use crate::db::Database;
+use crate::db::{Database, Error};
 use crate::parsing_data::{
     get_one_new_habr, get_one_new_hackernews, parse_starting_news,
 };
@@ -59,17 +59,13 @@ async fn send_last_new_hackernews(
     db: &Database,
     bot: &Bot,
     last_new: &mut String,
-) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+) -> Result<(), Error> {
     let first_new = get_one_new_hackernews().await?;
     if first_new.as_str() != last_new {
         *last_new = first_new.clone();
-        let user_ids = db.get_users_id().await;
-        if let Ok(user_list) = user_ids {
-            for user_id in user_list {
-                bot.send_message(ChatId(user_id), &first_new).await?;
-            }
-        } else if let Err(err) = user_ids {
-            log::error!("{}", err)
+        let user_ids = db.get_users_id().await?;
+        for user_id in user_ids {
+            bot.send_message(ChatId(user_id), &first_new).await?;
         }
     }
     Ok(())
@@ -79,17 +75,13 @@ async fn send_last_new_habr(
     db: &Database,
     bot: &Bot,
     last_new: &mut String,
-) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+) -> Result<(), Error> {
     let first_new = get_one_new_habr().await?;
     if first_new.as_str() != last_new {
         *last_new = first_new.clone();
-        let user_ids = db.get_users_id().await;
-        if let Ok(user_list) = user_ids {
-            for user_id in user_list {
-                bot.send_message(ChatId(user_id), &first_new).await?;
-            }
-        } else if let Err(err) = user_ids {
-            log::error!("{}", err)
+        let user_ids = db.get_users_id().await?;
+        for user_id in user_ids {
+            bot.send_message(ChatId(user_id), &first_new).await?;
         }
     }
     Ok(())
