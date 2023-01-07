@@ -1,7 +1,8 @@
 use std::time::Duration;
 
 use crate::bot::DATABASE;
-use crate::db::{Database, Error};
+use crate::db::Database;
+use crate::error::Error;
 use crate::parsing_data::{
     get_one_new_habr, get_one_new_hackernews, parse_starting_news,
 };
@@ -34,15 +35,15 @@ pub async fn handle_start(chat_id: ChatId, bot: Bot) {
     // Send greeting message to user and news
     tokio::spawn(async move {
         if let Err(err) = bot.send_message(chat_id, "Hello snikers").await {
-            log::error!("Error while sending message occures: {err}")
+            log::error!("{}", err)
         }
         let news_list = parse_starting_news().await.unwrap_or_else(|err| {
-            log::error!("Error getting news from hackernews: {}", err);
+            log::error!("{}", err);
             vec![]
         });
         for news in news_list {
             if let Err(err) = bot.send_message(chat_id, news).await {
-                log::error!("Error while sending message occures: {err}")
+                log::error!("{}", err)
             }
         }
     });

@@ -1,3 +1,4 @@
+use crate::error::Error;
 use scraper::{Html, Selector};
 
 const URL_HACKN: &'static str = "https://news.ycombinator.com/";
@@ -9,7 +10,7 @@ const SEL_HABR_TITLE: &'static str = "article>div>h2>a>span";
 async fn get_parsing_vars(
     url: &str,
     selector: &Vec<&'static str>,
-) -> Result<(Html, Vec<Selector>), Box<dyn std::error::Error + Send + Sync>> {
+) -> Result<(Html, Vec<Selector>), Error> {
     let response = reqwest::get(url).await?.text().await?;
     let document = Html::parse_document(&response);
     let selectors = selector
@@ -20,8 +21,7 @@ async fn get_parsing_vars(
     Ok((document, selectors))
 }
 
-pub async fn parse_starting_news(
-) -> Result<Vec<String>, Box<dyn std::error::Error + Send + Sync>> {
+pub async fn parse_starting_news() -> Result<Vec<String>, Error> {
     let mut result: Vec<String> = vec![];
     let (document, selector) =
         get_parsing_vars(URL_HACKN, &vec![SEL_HACKN]).await?;
@@ -45,8 +45,7 @@ pub async fn parse_starting_news(
     Ok(result)
 }
 
-pub async fn get_one_new_hackernews(
-) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
+pub async fn get_one_new_hackernews() -> Result<String, Error> {
     let (document, selector) =
         get_parsing_vars(URL_HACKN, &vec![SEL_HACKN]).await?;
     let result = document
@@ -68,8 +67,7 @@ pub async fn get_one_new_hackernews(
     Ok(result)
 }
 
-pub async fn get_one_new_habr(
-) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
+pub async fn get_one_new_habr() -> Result<String, Error> {
     let (document, selector) =
         get_parsing_vars(URL_HABR, &vec![SEL_HABR_TITLE, SEL_HABR_HREF])
             .await?;

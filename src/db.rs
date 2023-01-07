@@ -1,65 +1,14 @@
 use std::fs::OpenOptions;
 
 use crate::entity::users;
-use crate::migration::{DbErr, Migrator, MigratorTrait};
+use crate::error::Error;
+use crate::migration::{Migrator, MigratorTrait};
 use directories::BaseDirs;
 use sea_orm::{
     ColumnTrait, Database as SeaOrmDatabase, DatabaseConnection, EntityTrait,
     NotSet, QueryFilter, Set,
 };
 use teloxide::types::ChatId;
-use teloxide::RequestError;
-
-#[derive(Debug)]
-pub enum Error {
-    Database(DbErr),
-    File(std::io::Error),
-    Net(RequestError),
-    Generic(Box<dyn std::error::Error + Send + Sync>),
-}
-
-impl std::fmt::Display for Error {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match *self {
-            Self::Database(ref err) => {
-                write!(f, "Database error: {}", err)
-            }
-            Self::File(ref err) => {
-                write!(f, "File error: {}", err)
-            }
-            Self::Generic(ref err) => {
-                write!(f, "Other error: {}", err)
-            }
-            Self::Net(ref err) => {
-                write!(f, "Network error: {}", err)
-            }
-        }
-    }
-}
-
-impl From<DbErr> for Error {
-    fn from(err: DbErr) -> Self {
-        Self::Database(err)
-    }
-}
-
-impl From<std::io::Error> for Error {
-    fn from(err: std::io::Error) -> Self {
-        Self::File(err)
-    }
-}
-
-impl From<Box<dyn std::error::Error + Send + Sync>> for Error {
-    fn from(err: Box<dyn std::error::Error + Send + Sync>) -> Self {
-        Self::Generic(err)
-    }
-}
-
-impl From<RequestError> for Error {
-    fn from(err: RequestError) -> Self {
-        Self::Net(err)
-    }
-}
 
 async fn get_db_pool() -> Result<DatabaseConnection, Error> {
     let base_dirs = BaseDirs::new();

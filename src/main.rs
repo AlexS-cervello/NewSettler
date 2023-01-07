@@ -5,10 +5,11 @@ mod bot;
 mod controllers;
 mod db;
 mod entity;
+mod error;
 mod migration;
 mod parsing_data;
 
-#[tokio::main]
+#[tokio::main(flavor = "multi_thread")]
 async fn main() {
     bot::run().await;
 }
