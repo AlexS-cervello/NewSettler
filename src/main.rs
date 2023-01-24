@@ -11,5 +11,5 @@ mod parsing_data;
 
 #[tokio::main(flavor = "multi_thread")]
 async fn main() {
-    bot::run().await;
+    bot::run().await.unwrap_or_else(|err| println!("{err}"));
 }

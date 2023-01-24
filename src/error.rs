@@ -1,4 +1,8 @@
+use std::env::VarError;
+
 use crate::migration::DbErr;
+use log::SetLoggerError;
+use log4rs::config::runtime::ConfigErrors;
 use teloxide::RequestError;
 
 #[derive(Debug)]
@@ -8,6 +12,9 @@ pub enum Error {
     Generic(Box<dyn std::error::Error + Send + Sync>),
     TeloxideRequest(RequestError),
     Request(reqwest::Error),
+    Config(ConfigErrors),
+    Var(VarError),
+    Logger(SetLoggerError),
 }
 
 impl std::fmt::Display for Error {
@@ -27,6 +34,15 @@ impl std::fmt::Display for Error {
             }
             Self::Request(ref err) => {
                 write!(f, "Request error: {}", err)
+            }
+            Self::Config(ref err) => {
+                write!(f, "Config error: {}", err)
+            }
+            Self::Var(ref err) => {
+                write!(f, "Variable error: {}", err)
+            }
+            Self::Logger(ref err) => {
+                write!(f, "Logger error: {}", err)
             }
         }
     }
@@ -59,5 +75,23 @@ impl From<RequestError> for Error {
 impl From<reqwest::Error> for Error {
     fn from(err: reqwest::Error) -> Self {
         Self::Request(err)
+    }
+}
+
+impl From<ConfigErrors> for Error {
+    fn from(err: ConfigErrors) -> Self {
+        Self::Config(err)
+    }
+}
+
+impl From<VarError> for Error {
+    fn from(err: VarError) -> Self {
+        Self::Var(err)
+    }
+}
+
+impl From<SetLoggerError> for Error {
+    fn from(err: SetLoggerError) -> Self {
+        Self::Logger(err)
     }
 }

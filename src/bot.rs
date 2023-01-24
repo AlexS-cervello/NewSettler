@@ -1,9 +1,15 @@
 use crate::controllers::{handle_start, start_pooling};
 use crate::db::Database;
+use crate::error::Error;
 use async_once::AsyncOnce;
 use lazy_static::lazy_static;
-use std::error::Error;
+use log::LevelFilter;
+use log4rs::append::file::FileAppender;
+use log4rs::config::{Appender, Config, Root};
+use log4rs::encode::pattern::PatternEncoder;
 use teloxide::{prelude::*, types::Me, utils::command::BotCommands};
+
+const LOG_FILENAME: &'static str = "settler.log";
 
 #[derive(BotCommands, Clone)]
 #[command(
@@ -22,18 +28,22 @@ lazy_static! {
         AsyncOnce::new(async { Database::new().await.unwrap() });
 }
 
-fn set_token() {
-    let token = std::env::var("BOT_TOKEN");
-    if let Ok(token) = token {
-        std::env::set_var("TELOXIDE_TOKEN", token);
-    } else {
-        println!("Environment variable BOT_TOKEN is not set");
-        std::process::exit(0);
-    }
+fn set_token() -> Result<(), Error> {
+    let token = std::env::var("BOT_TOKEN")?;
+    std::env::set_var("TELOXIDE_TOKEN", token);
+    Ok(())
 }
-pub async fn run() {
-    set_token();
-    pretty_env_logger::init();
+
+pub async fn run() -> Result<(), Error> {
+    set_token()?;
+    let logfile = FileAppender::builder()
+        .encoder(Box::new(PatternEncoder::new("{l} - {m}\n")))
+        .build(LOG_FILENAME)?;
+    let config = Config::builder()
+        .appender(Appender::builder().build("logfile", Box::new(logfile)))
+        .build(Root::builder().appender("logfile").build(LevelFilter::Info))?;
+    log4rs::init_config(config)?;
+    println!("Logging to {LOG_FILENAME}");
     log::info!("Starting NewSettler Bot");
 
     DATABASE.get().await.apply_migrations().await.unwrap();
@@ -48,13 +58,14 @@ pub async fn run() {
         .build()
         .dispatch()
         .await;
+    Ok(())
 }
 
 async fn message_handler(
     bot: Bot,
     msg: Message,
     me: Me,
-) -> Result<(), Box<dyn Error + Send + Sync>> {
+) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     if let Some(text) = msg.text() {
         match BotCommands::parse(text, me.username()) {
             Ok(Command::Help) => {

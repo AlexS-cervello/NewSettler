@@ -36,7 +36,7 @@ cargo build --release
 
 Run
 ```
-RUST_LOG=info ./target/release/new-settler-bot
+./target/release/new-settler-bot
 ```
 
 ## License
