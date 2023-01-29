@@ -9,7 +9,7 @@ use crate::parsing_data::{
 use teloxide::{requests::Requester, types::ChatId, Bot};
 
 pub async fn start_pooling(db: &Database, bot: Bot) {
-    let mut last_new_hackernew = String::new();
+    let mut last_new_hackernew: Vec<String> = vec![];
     let mut last_new_habr = String::new();
     let mut count: u16 = 1;
     loop {
@@ -59,11 +59,13 @@ pub async fn handle_start(chat_id: ChatId, bot: Bot) {
 async fn send_last_new_hackernews(
     db: &Database,
     bot: &Bot,
-    last_new: &mut String,
+    last_new: &mut Vec<String>,
 ) -> Result<(), Error> {
     let first_new = get_one_new_hackernews().await?;
-    if first_new.as_str() != last_new {
-        *last_new = first_new.clone();
+    let url = first_new.lines().nth(1).unwrap_or(&first_new);
+    log::info!("{}", url);
+    if !last_new.contains(&url.to_owned()) {
+        last_new.push(url.to_owned());
         let user_ids = db.get_users_id().await?;
         for user_id in user_ids {
             bot.send_message(ChatId(user_id), &first_new).await?;
