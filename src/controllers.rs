@@ -63,7 +63,6 @@ async fn send_last_new_hackernews(
 ) -> Result<(), Error> {
     let first_new = get_one_new_hackernews().await?;
     let url = first_new.lines().nth(1).unwrap_or(&first_new);
-    log::info!("{}", url);
     if !last_new.contains(&url.to_owned()) {
         last_new.push(url.to_owned());
         let user_ids = db.get_users_id().await?;
